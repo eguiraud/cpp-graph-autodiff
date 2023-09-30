@@ -1,0 +1,2 @@
+# See MODULE.bazel for external dependencies setup.
+# We only use WORKSPACE.bazel for packages that don't support modules yet

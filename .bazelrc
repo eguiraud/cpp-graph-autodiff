@@ -1,0 +1,2 @@
+common --enable_bzlmod
+common --cxxopt='-std=c++17'
