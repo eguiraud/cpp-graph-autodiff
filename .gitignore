@@ -1,0 +1,4 @@
+bazel-bin
+bazel-cpp-compute-graph-autodiff
+bazel-out
+bazel-testlogs
