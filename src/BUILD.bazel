@@ -1,0 +1,9 @@
+cc_library(
+    name = "compute_graph_ad",
+    srcs = ["graph.cpp"],
+    hdrs = ["graph.h"],
+    deps = [
+        "@abseil-cpp//absl/container:flat_hash_map",
+    ],
+    visibility = ["//tests:__pkg__"]
+)
