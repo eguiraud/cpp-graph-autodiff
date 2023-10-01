@@ -2,5 +2,8 @@ cc_test(
   name = "test",
   size = "small",
   srcs = ["test.cpp"],
-  deps = ["@googletest//:gtest_main"],
+  deps = [
+    "@googletest//:gtest_main",
+    "//src:compute_graph_ad"
+  ],
 )
