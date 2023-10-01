@@ -28,3 +28,13 @@ jobs:
           bazel mod graph
           bazel test -c dbg -s --test_output=all //tests:test
         shell: bash
+
+  clang_format:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: DoozyX/clang-format-lint-action@v0.14
+      with:
+        source: '.'
+        extensions: 'h,cpp'
+        clangFormatVersion: 14
