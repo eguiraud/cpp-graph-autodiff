@@ -11,7 +11,7 @@ cc_library(
         "@abseil-cpp//absl/container:flat_hash_map",
         "@fmt//:fmt"
     ],
-    visibility = ["//tests:__pkg__"]
+    visibility = ["//visibility:public"]
 )
 
 cc_proto_library(
