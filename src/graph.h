@@ -4,11 +4,11 @@ This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
 This is free software, and you are welcome to redistribute it
 under certain conditions; type `show c' for details.
 */
-#include "absl/container/flat_hash_map.h"
-
 #include <memory>
 #include <string>
 #include <string_view>
+
+#include "absl/container/flat_hash_map.h"
 
 /* A note on the use of shared_ptr<const T>
 
