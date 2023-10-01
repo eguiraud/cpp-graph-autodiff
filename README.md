@@ -21,5 +21,6 @@ or [clang-tidy](https://clang.llvm.org/extra/clang-tidy/) can use to understand 
 To create or refresh the compilation database, run:
 
 ```
-bazel run @hedron_compile_commands//:refresh_all
+bazel build //tests:test # build everything and generate protobuf files
+bazel run @hedron_compile_commands//:refresh_all # refresh compile_commands.json
 ```
