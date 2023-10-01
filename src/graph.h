@@ -5,6 +5,7 @@ This is free software, and you are welcome to redistribute it
 under certain conditions: see LICENSE.
 */
 
+#include <cassert>
 #include <filesystem>  // std::path
 #include <memory>
 #include <string>
@@ -92,7 +93,7 @@ class Graph {
   std::shared_ptr<const Op> op;
 
  public:
-  Graph(std::shared_ptr<const Op> op) : op(op) {}
+  Graph(std::shared_ptr<const Op> op) : op(op) { assert(op); }
 
   // using the hidden friend pattern not to pollute the global namespace:
   // https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1601r0.pdf
