@@ -1,5 +1,7 @@
 :construction: this project is a work in progress :construction:
 
+[![ci](https://github.com/eguiraud/cpp-graph-autodiff/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/eguiraud/cpp-graph-autodiff/actions/workflows/ci.yml)
+
 # C++ compute graph autodiff
 
 A proof of concept implementation of C++ compute graph autodifferentiation.

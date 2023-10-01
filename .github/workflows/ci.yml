@@ -1,4 +1,4 @@
-name: Test
+name: CI
 run-name: "CI run for @${{ github.actor }}, reason: {{ github.event-name }}"
 on:
   push:
