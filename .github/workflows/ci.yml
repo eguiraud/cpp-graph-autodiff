@@ -1,0 +1,30 @@
+name: Test
+run-name: "CI run for @${{ github.actor }}, reason: {{ github.event-name }}"
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test_linux:
+    name: Test Linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          bazel version
+          bazel mod graph
+          bazel test -c dbg -s --test_output=all //tests:test
+        shell: bash
+
+  test_mac:
+    name: Test MacOS
+    runs-on: macos-12
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          bazel version
+          bazel mod graph
+          bazel test -c dbg -s --test_output=all //tests:test
+        shell: bash
