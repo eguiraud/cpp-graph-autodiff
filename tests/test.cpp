@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "absl/status/statusor.h"
 #include "src/graph.h"
 
 using namespace compute_graph_ad;
@@ -58,4 +59,24 @@ TEST(Graph, MulEval) {
   // Graph and Graph
   const auto g9 = g1 * g1;  // Graph * Graph
   EXPECT_DOUBLE_EQ(g9.eval(inputs), 81.);
+}
+
+TEST(Tests, WriteAndReadGraph) {
+  const Const c{40.};
+  const Var x{"x"};
+  const Inputs inputs{{"x", 2.}};
+
+  const Graph g1 = x + c;
+
+  // write out
+  const absl::Status status = to_file(g1, "test.pb");
+  ASSERT_TRUE(status.ok());
+
+  // read in
+  const absl::StatusOr<Graph> gs = from_file("test.pb");
+  ASSERT_TRUE(gs.ok());
+
+  // check the graph still evaluates correctly
+  const Graph &g2 = gs.value();
+  EXPECT_DOUBLE_EQ(g2.eval(inputs), 42.);
 }

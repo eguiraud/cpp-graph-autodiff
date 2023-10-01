@@ -3,6 +3,7 @@ cc_test(
   size = "small",
   srcs = ["test.cpp"],
   deps = [
+    "@abseil-cpp//absl/status:statusor",
     "@googletest//:gtest_main",
     "//src:compute_graph_ad"
   ],
