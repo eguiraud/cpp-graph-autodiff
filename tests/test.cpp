@@ -62,11 +62,11 @@ TEST(Graph, MulEval) {
 }
 
 TEST(Tests, WriteAndReadGraph) {
-  const Const c{40.};
+  const Const c{20.};
   const Var x{"x"};
   const Inputs inputs{{"x", 2.}};
 
-  const Graph g1 = x + c;
+  const Graph g1 = x + c * x;
 
   // write out
   const absl::Status status = to_file(g1, "test.pb");
