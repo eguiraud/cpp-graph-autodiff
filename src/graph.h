@@ -4,11 +4,17 @@ This program comes with ABSOLUTELY NO WARRANTY.
 This is free software, and you are welcome to redistribute it
 under certain conditions: see LICENSE.
 */
+
+#include <filesystem>  // std::path
 #include <memory>
 #include <string>
 #include <string_view>
+#include <utility>  // std::pair
 
 #include "absl/container/flat_hash_map.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "src/graph.pb.h"
 
 /* A note on the use of shared_ptr<const T>
 
@@ -35,6 +41,15 @@ class Op {
 
   /// Evaluate this operation on the inputs provided.
   virtual float eval(const Inputs& inputs) const noexcept = 0;
+
+  /// Retrieve a type-erased protobuf representation of the operation.
+  /// The first element of the pair is the protobuf enum that specifies
+  /// what operation has been serialized, the second element is a void
+  /// pointer to the corresponding protobuf class instance (e.g.
+  /// graph_proto::Sum).
+  /// The caller takes ownership of the pointer returned.
+  virtual std::pair<graph_proto::Graph::OpCase, void*> to_proto()
+      const noexcept = 0;
 };
 
 /// A sum operation, with two operands that can be operations themselves.
@@ -46,6 +61,11 @@ class Sum : public Op {
       : op1(std::move(op1)), op2(std::move(op2)) {}
 
   float eval(const Inputs& inputs) const noexcept final;
+
+  std::pair<graph_proto::Graph::OpCase, void*> to_proto() const noexcept final;
+
+  static std::unique_ptr<Sum> from_proto(
+      const graph_proto::Sum& sproto) noexcept;
 };
 
 /// A multiplication operation, with two operands that can be operations
@@ -58,6 +78,11 @@ class Mul : public Op {
       : op1(std::move(op1)), op2(std::move(op2)) {}
 
   float eval(const Inputs& inputs) const noexcept final;
+
+  std::pair<graph_proto::Graph::OpCase, void*> to_proto() const noexcept final;
+
+  static std::unique_ptr<Mul> from_proto(
+      const graph_proto::Mul& mproto) noexcept;
 };
 
 /// A compute graph.
@@ -80,6 +105,12 @@ class Graph {
   }
 
   float eval(const Inputs& inputs) const noexcept;
+
+  // Serialize this Graph instance into a corresponding protobuf object.
+  std::unique_ptr<const graph_proto::Graph> to_proto() const noexcept;
+
+  // Deserialize a protobuf object into a Graph instance.
+  static Graph from_proto(const graph_proto::Graph& gproto) noexcept;
 };
 
 /// A scalar constant.
@@ -88,8 +119,6 @@ class Const : public Op {
 
  public:
   Const(float value) : value(value) {}
-
-  float eval(const Inputs&) const noexcept final { return value; }
 
   /* operator+ */
   // using the hidden friend pattern to avoid polluting the global namespace:
@@ -121,6 +150,12 @@ class Const : public Op {
   }
 
   friend Graph operator*(const Const& c1, const Graph& g2) { return g2 * c1; }
+
+  float eval(const Inputs&) const noexcept final { return value; }
+
+  std::pair<graph_proto::Graph::OpCase, void*> to_proto() const noexcept final;
+  static std::unique_ptr<Const> from_proto(
+      const graph_proto::Const& cproto) noexcept;
 };
 
 /// A scalar variable: a named placeholder for an input to `evaluate`.
@@ -177,5 +212,19 @@ class Var : public Op {
   friend Graph operator*(const Var& v1, const Graph& g2) { return g2 * v1; }
 
   float eval(const Inputs& inputs) const noexcept final;
+
+  std::pair<graph_proto::Graph::OpCase, void*> to_proto() const noexcept final;
+
+  static std::unique_ptr<Var> from_proto(
+      const graph_proto::Var& vproto) noexcept;
 };
+
+namespace fs = std::filesystem;
+
+/// Serialize a compute graph to a protobuf file.
+absl::Status to_file(const Graph& graph, fs::path path);
+
+/// Deserialize a protobuf file into a Graph instance.
+absl::StatusOr<Graph> from_file(fs::path path);
+
 }  // namespace compute_graph_ad

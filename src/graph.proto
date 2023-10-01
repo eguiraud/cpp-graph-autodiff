@@ -1,0 +1,37 @@
+/*
+cpp-graph-autodiff  Copyright (C) 2023 Enrico Guiraud
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under certain conditions: see LICENSE.
+*/
+
+syntax = "proto2";
+
+package graph_proto;
+
+message Graph {
+  oneof Op {
+    Sum sum = 1;
+    Mul mul = 2;
+    Var var = 3;
+    Const const = 4;
+  }  
+}
+
+message Sum {
+  required Graph op1 = 1;
+  required Graph op2 = 2;
+}
+
+message Mul {
+  required Graph op1 = 1;
+  required Graph op2 = 2;
+}
+
+message Var {
+  required string name = 1;
+}
+
+message Const {
+  required float value = 1;
+}
