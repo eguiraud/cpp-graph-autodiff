@@ -1,9 +1,25 @@
+load("@rules_proto//proto:defs.bzl", "proto_library")
+
 cc_library(
     name = "compute_graph_ad",
     srcs = ["graph.cpp"],
     hdrs = ["graph.h"],
     deps = [
+        ":graph_cc_proto",
+        "@abseil-cpp//absl/status:status",
+        "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/container:flat_hash_map",
+        "@fmt//:fmt"
     ],
     visibility = ["//tests:__pkg__"]
+)
+
+cc_proto_library(
+    name = "graph_cc_proto",
+    deps = [":graph_proto"],
+)
+
+proto_library(
+    name = "graph_proto",
+    srcs = ["graph.proto"],
 )
