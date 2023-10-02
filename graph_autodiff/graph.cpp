@@ -14,7 +14,7 @@ under certain conditions: see LICENSE.
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "fmt/core.h"
-#include "src/graph.pb.h"
+#include "graph_autodiff/graph.pb.h"
 
 using namespace graph_autodiff;
 namespace gpb = graph_proto;
