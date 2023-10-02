@@ -15,7 +15,7 @@ jobs:
       - run: |
           bazel version
           bazel mod graph
-          bazel test -c dbg -s --test_output=all //tests:test
+          bazel test -c dbg -s --test_output=all '//...'
         shell: bash
 
   test_mac:
@@ -26,7 +26,7 @@ jobs:
       - run: |
           bazel version
           bazel mod graph
-          bazel test -c dbg -s --test_output=all //tests:test
+          bazel test -c dbg -s --test_output=all '//...'
         shell: bash
 
   clang_format:
