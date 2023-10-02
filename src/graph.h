@@ -181,7 +181,10 @@ class Const : public Op {
       const graph_proto::Const& cproto) noexcept;
 };
 
-/// A scalar variable: a named placeholder for an input to `evaluate`.
+/// A scalar variable: a value-less, named placeholder for a variable in the
+/// expression. Note that a Var does not contain any value: it only acts as a
+/// placeholder for one in a compute graph. Concrete values for each of the
+/// variables used will then be passed to Graph::eval as part of the Inputs.
 class Var : public Op {
   std::string name;
 
