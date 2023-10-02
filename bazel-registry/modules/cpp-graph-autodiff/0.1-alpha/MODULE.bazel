@@ -1,0 +1,8 @@
+module(name = "cpp-graph-autodiff", version = "0.1-alpha")
+
+bazel_dep(name = "abseil-cpp", version = "20230802.0")
+bazel_dep(name = "eigen", version = "3.4.0")
+bazel_dep(name = "fmt", version = "10.1.1")
+bazel_dep(name = "googletest", version = "1.14.0")
+bazel_dep(name = "protobuf", version = "21.7")
+bazel_dep(name = "rules_proto", version = "5.3.0-21.7")

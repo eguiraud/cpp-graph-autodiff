@@ -1,0 +1,7 @@
+{
+  "type": "archive",
+  "url": "https://github.com/eguiraud/cpp-graph-autodiff/archive/refs/tags/v0.1-alpha.zip",
+  "integrity": "sha256-10aH+hHsVlRwFXoapxEFqd7YqkyFOo6ykwnOLJeAt6c=",
+  "strip_prefix": "cpp-graph-autodiff-0.1-alpha",
+  "archive_type": "zip"
+}
