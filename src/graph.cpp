@@ -250,8 +250,6 @@ absl::Status compute_graph_ad::to_file(const Graph& graph, fs::path path) {
                       path.string())));
   }
 
-  google::protobuf::ShutdownProtobufLibrary();
-
   return ret_status;
 }
 
@@ -269,7 +267,6 @@ absl::StatusOr<Graph> compute_graph_ad::from_file(fs::path path) {
 
     const bool ok = gproto.ParseFromIstream(&in_file);
     if (!ok) {
-      google::protobuf::ShutdownProtobufLibrary();
       return absl::AbortedError(
           fmt::format("Something went wrong while serializing Graph to file {}",
                       path.string()));
