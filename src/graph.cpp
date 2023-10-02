@@ -86,17 +86,22 @@ float Sum::eval(const Inputs& inputs) const noexcept {
   return op1->eval(inputs) + op2->eval(inputs);
 }
 
-float Sum::eval_grad(const Inputs& inputs, float* grad_out) const noexcept {
-  // we want it row-major so we can give you views over the different rows to
-  // callees
+float Sum::eval_grad(const Inputs& inputs,
+                     Eigen::Map<Eigen::RowVectorXf>& grad_out) const noexcept {
+  // row-major so we can give out views over the different rows to callees
   Eigen::Matrix<float, 2, Eigen::Dynamic, Eigen::RowMajorBit> jacobian(
       2, inputs.size());
-  const float value1 = op1->eval_grad(inputs, jacobian.data());
-  const float value2 = op2->eval_grad(inputs, jacobian.data() + inputs.size());
 
-  Eigen::Map<Eigen::RowVectorXf> grad_out_as_eigen(grad_out, inputs.size());
+  Eigen::Map<Eigen::RowVectorXf> first_row_view(jacobian.data(),
+                                                jacobian.cols());
+  const float value1 = op1->eval_grad(inputs, first_row_view);
+
+  Eigen::Map<Eigen::RowVectorXf> second_row_view(
+      jacobian.data() + jacobian.rowStride(), jacobian.cols());
+  const float value2 = op2->eval_grad(inputs, second_row_view);
+
   // the vector in the vector-jacobian product is just Ones() for a Sum
-  grad_out_as_eigen = Eigen::RowVector2f::Ones() * jacobian;
+  grad_out = Eigen::RowVector2f::Ones() * jacobian;
 
   return value1 + value2;
 }
@@ -127,18 +132,24 @@ float Mul::eval(const Inputs& inputs) const noexcept {
   return op1->eval(inputs) * op2->eval(inputs);
 }
 
-float Mul::eval_grad(const Inputs& inputs, float* grad_out) const noexcept {
-  // we want it row-major so we can give you views over the different rows to
-  // callees
+float Mul::eval_grad(const Inputs& inputs,
+                     Eigen::Map<Eigen::RowVectorXf>& grad_out) const noexcept {
+  // row-major so we can give out views over the different rows to callees
   Eigen::Matrix<float, 2, Eigen::Dynamic, Eigen::RowMajorBit> jacobian(
       2, inputs.size());
-  const float value1 = op1->eval_grad(inputs, jacobian.data());
-  const float value2 = op2->eval_grad(inputs, jacobian.data() + inputs.size());
 
-  Eigen::Map<Eigen::RowVectorXf> grad_out_as_eigen(grad_out, inputs.size());
+  Eigen::Map<Eigen::RowVectorXf> first_row_view(jacobian.data(),
+                                                jacobian.cols());
+  const float value1 = op1->eval_grad(inputs, first_row_view);
+
+  Eigen::Map<Eigen::RowVectorXf> second_row_view(
+      jacobian.data() + jacobian.rowStride(), jacobian.cols());
+  const float value2 = op2->eval_grad(inputs, second_row_view);
+
+  // dMul/dvalue_i for value1*value2 is (value2, value1)
   Eigen::RowVector2f dmul_dops;
   dmul_dops << value2, value1;
-  grad_out_as_eigen = dmul_dops * jacobian;
+  grad_out = dmul_dops * jacobian;
 
   return value1 * value2;
 }
@@ -174,10 +185,13 @@ std::pair<float, Eigen::RowVectorXf> Graph::eval_grad(
   assert(op);
 
   Eigen::RowVectorXf grads(inputs.size());
-  return {op->eval_grad(inputs, grads.data()), grads};
+  Eigen::Map<Eigen::RowVectorXf> grads_view(grads.data(), grads.size());
+  return {op->eval_grad(inputs, grads_view), grads};
 }
 
-float Const::eval_grad(const Inputs& inputs, float* grad_out) const noexcept {
+float Const::eval_grad(
+    const Inputs& inputs,
+    Eigen::Map<Eigen::RowVectorXf>& grad_out) const noexcept {
   // derivatives of a constant are all zero
   for (std::size_t i = 0; i < inputs.size(); ++i) grad_out[i] = 0;
   return value;
@@ -201,7 +215,8 @@ float Var::eval(const Inputs& inputs) const noexcept {
   return var_it->second;
 }
 
-float Var::eval_grad(const Inputs& inputs, float* grad_out) const noexcept {
+float Var::eval_grad(const Inputs& inputs,
+                     Eigen::Map<Eigen::RowVectorXf>& grad_out) const noexcept {
   // derivatives of a variable w.r.t. all variables is a one-hot vector:
   // the only 1. is at the position of the variable itself
   for (std::size_t i = 0; i < inputs.size(); ++i) grad_out[i] = 0;
