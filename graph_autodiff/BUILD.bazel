@@ -25,3 +25,14 @@ proto_library(
     name = "graph_proto",
     srcs = ["graph.proto"],
 )
+
+cc_test(
+  name = "graph_autodiff_test",
+  size = "small",
+  srcs = ["graph_test.cpp"],
+  deps = [
+    "@abseil-cpp//absl/status:statusor",
+    "@googletest//:gtest_main",
+    "//graph_autodiff"
+  ],
+)

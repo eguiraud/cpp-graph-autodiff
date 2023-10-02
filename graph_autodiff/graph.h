@@ -16,7 +16,7 @@ under certain conditions: see LICENSE.
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "src/graph.pb.h"
+#include "graph_autodiff/graph.pb.h"
 
 /* A note on the use of shared_ptr<const T>
 
