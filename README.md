@@ -9,11 +9,14 @@ The library builds compute graphs made of multiplications and additions of varia
 It can then evaluate the graph and its gradient w.r.t. the input variables at a point.
 
 [Forward mode autodifferentiation](https://en.wikipedia.org/wiki/Automatic_differentiation#Forward_accumulation) is used to compute the gradients.
-Differently from most implementations, we return derivatives w.r.t. all input variables even if using forward mode.
+Differently from most implementations, we return derivatives with respect to all input variables, calculated in a single pass, even if using forward mode.
 
 ## How does this look?
 
 ```cpp
+#include "graph_autodiff/graph.h"
+using namespace graph_autodiff;
+
 // create variables and constants
 const Var x{"x"};
 const Var y{"y"};
@@ -21,8 +24,6 @@ const Var z{"z"};
 const Const c{10.};
 
 // build an expression (aka compute graph)
-// currently only additions and multiplications are supported
-
 // g(x,y,z) = yx^3 + xyz + cz(x + y) + c
 const Graph g = x*x*x*y + x*y*z + c*z*(x + y) + c;
 
@@ -46,24 +47,56 @@ EXPECT_FLOAT_EQ(grads(1), 56.);
 EXPECT_FLOAT_EQ(grads(2), 56.);
 ```
 
-`Graph` objects can be serialized and deserialized via [protobuf](https://protobuf.dev)
-using the `to_file` and `from_file` free functions.
+### Ser/Deserialization of compute graphs
 
-## Run tests
+`Graph` objects are written to and read from files via [protobuf](https://protobuf.dev).
+For example, continuing from above:
 
-```shell
-bazel run '//tests:test'
+```cpp
+// write out
+const absl::Status status = to_file(g, "mygraph.pb");
+ASSERT_TRUE(status.ok());
+
+// read in
+const absl::StatusOr<Graph> gs = from_file("mygraph.pb");
+ASSERT_TRUE(gs.ok());
 ```
 
-## For developers: producing a compilation database
+## Using this library
+
+`cpp-graph-autodiff` can be imported into your project as a [Bazel module](https://bazel.build/external/module).
+Just add this line to your `MODULE.bazel` file:
+```
+bazel_dep(name = "cpp-graph-autodiff", version = "0.1-alpha")
+```
+and then tell Bazel to use this project's dedicated registry, e.g.:
+
+```shell
+bazel build --enable_bzlmod \
+	--registry https://bcr.bazel.build \
+	--registry https://raw.githubusercontent.com/eguiraud/cpp-graph-autodiff/bazel-registry/bazel-registry \
+	--cxxopt='-std=c++17' \
+	'//...'
+```
+You can also add these options to your `.bazelrc`, of course. 
+
+## For developers
+
+### Running tests
+
+```shell
+bazel test --test_output=all '//...'
+```
+
+### Producing a compilation database
 
 This project uses [bazel-compile-commands-extractor](https://github.com/hedronvision/bazel-compile-commands-extractor)
-to generate a compilation database (i.e. a file called `compile_commands.json`) which tools like [clangd](https://clangd.llvm.org/),
-or [clang-tidy](https://clang.llvm.org/extra/clang-tidy/) can use to understand your source files.
+to generate a compilation database: a file called `compile_commands.json` which tools like [clangd](https://clangd.llvm.org/),
+or [clang-tidy](https://clang.llvm.org/extra/clang-tidy/) can use to better interpret the project's source files.
 
 To create or refresh the compilation database, run:
 
-```
-bazel build //tests:test # build everything and generate protobuf files
+```shell
+bazel build '//...' # build everything and generate protobuf files
 bazel run @hedron_compile_commands//:refresh_all # refresh compile_commands.json
 ```
