@@ -1,4 +1,4 @@
-module(name = "compute-graph-autodiff", version = "0.1")
+module(name = "cpp-graph-autodiff", version = "0.1")
 
 bazel_dep(name = "abseil-cpp", version = "20230802.0")
 bazel_dep(name = "eigen", version = "3.4.0")

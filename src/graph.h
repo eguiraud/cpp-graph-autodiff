@@ -29,7 +29,7 @@ under certain conditions: see LICENSE.
     operations, so shared ownership is actually a good fit
 */
 
-namespace compute_graph_ad {
+namespace graph_autodiff {
 
 namespace gpb = graph_proto;
 

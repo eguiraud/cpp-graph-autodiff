@@ -1,7 +1,7 @@
 load("@rules_proto//proto:defs.bzl", "proto_library")
 
 cc_library(
-    name = "compute_graph_ad",
+    name = "graph_autodiff",
     srcs = ["graph.cpp"],
     hdrs = ["graph.h"],
     deps = [

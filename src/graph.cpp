@@ -16,7 +16,7 @@ under certain conditions: see LICENSE.
 #include "fmt/core.h"
 #include "src/graph.pb.h"
 
-using namespace compute_graph_ad;
+using namespace graph_autodiff;
 namespace gpb = graph_proto;
 
 namespace {
@@ -217,7 +217,7 @@ Graph Graph::from_proto(const gpb::Graph& gproto) noexcept {
   return Graph(op_from_proto(gproto));
 }
 
-absl::Status compute_graph_ad::to_file(const Graph& graph, fs::path path) {
+absl::Status graph_autodiff::to_file(const Graph& graph, fs::path path) {
   absl::Status ret_status = absl::OkStatus();
 
   GOOGLE_PROTOBUF_VERIFY_VERSION;
@@ -240,7 +240,7 @@ absl::Status compute_graph_ad::to_file(const Graph& graph, fs::path path) {
   return ret_status;
 }
 
-absl::StatusOr<Graph> compute_graph_ad::from_file(fs::path path) {
+absl::StatusOr<Graph> graph_autodiff::from_file(fs::path path) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   gpb::Graph gproto;

@@ -3,7 +3,7 @@
 #include "absl/status/statusor.h"
 #include "src/graph.h"
 
-using namespace compute_graph_ad;
+using namespace graph_autodiff;
 
 TEST(Graph, SumEval) {
   const Const c(2.);

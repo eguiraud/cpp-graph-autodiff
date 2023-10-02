@@ -5,6 +5,6 @@ cc_test(
   deps = [
     "@abseil-cpp//absl/status:statusor",
     "@googletest//:gtest_main",
-    "//src:compute_graph_ad"
+    "//src:graph_autodiff"
   ],
 )
