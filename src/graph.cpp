@@ -7,6 +7,7 @@ under certain conditions: see LICENSE.
 #include "graph.h"
 
 #include <cassert>
+#include <cstddef>  // std::size_t
 #include <fstream>
 
 #include "absl/status/status.h"
@@ -65,11 +66,37 @@ std::unique_ptr<const Op> op_from_proto(const gpb::Graph& gproto) {
 
   return op;
 }
+
+std::size_t find_var_idx(std::string_view name, const Inputs& inputs) {
+  // TODO this should _not_ be in the hot loop. do it once at the beginning.
+  std::vector<std::string> var_names;
+  var_names.reserve(inputs.size());
+  for (auto& [name, value] : inputs) var_names.push_back(name);
+  std::sort(var_names.begin(), var_names.end());
+
+  auto it = std::find(var_names.begin(), var_names.end(), name);
+  return std::distance(var_names.begin(), it);
+}
 }  // end of anonymous namespace
 
 float Sum::eval(const Inputs& inputs) const noexcept {
   assert(op1 && op2);
   return op1->eval(inputs) + op2->eval(inputs);
+}
+
+float Sum::eval_grad(const Inputs& inputs, float* grad_out) const noexcept {
+  // we want it row-major so we can give you views over the different rows to
+  // callees
+  Eigen::Matrix<float, 2, Eigen::Dynamic, Eigen::RowMajorBit> jacobian(
+      2, inputs.size());
+  const float value1 = op1->eval_grad(inputs, jacobian.data());
+  const float value2 = op2->eval_grad(inputs, jacobian.data() + inputs.size());
+
+  Eigen::Map<Eigen::RowVectorXf> grad_out_as_eigen(grad_out, inputs.size());
+  // the vector in the vector-jacobian product is just Ones() for a Sum
+  grad_out_as_eigen = Eigen::RowVector2f::Ones() * jacobian;
+
+  return value1 + value2;
 }
 
 std::pair<gpb::Graph::OpCase, void*> Sum::to_proto() const noexcept {
@@ -98,6 +125,22 @@ float Mul::eval(const Inputs& inputs) const noexcept {
   return op1->eval(inputs) * op2->eval(inputs);
 }
 
+float Mul::eval_grad(const Inputs& inputs, float* grad_out) const noexcept {
+  // we want it row-major so we can give you views over the different rows to
+  // callees
+  Eigen::Matrix<float, 2, Eigen::Dynamic, Eigen::RowMajorBit> jacobian(
+      2, inputs.size());
+  const float value1 = op1->eval_grad(inputs, jacobian.data());
+  const float value2 = op2->eval_grad(inputs, jacobian.data() + inputs.size());
+
+  Eigen::Map<Eigen::RowVectorXf> grad_out_as_eigen(grad_out, inputs.size());
+  Eigen::RowVector2f dmul_dops;
+  dmul_dops << value2, value1;
+  grad_out_as_eigen = dmul_dops * jacobian;
+
+  return value1 * value2;
+}
+
 std::pair<gpb::Graph::OpCase, void*> Mul::to_proto() const noexcept {
   auto* mul = new gpb::Mul();  // caller will take ownership
 
@@ -124,6 +167,20 @@ float Graph::eval(const Inputs& inputs) const noexcept {
   return op->eval(inputs);
 }
 
+std::pair<float, Eigen::RowVectorXf> Graph::eval_grad(
+    const Inputs& inputs) const noexcept {
+  assert(op);
+
+  Eigen::RowVectorXf grads(inputs.size());
+  return {op->eval_grad(inputs, grads.data()), grads};
+}
+
+float Const::eval_grad(const Inputs& inputs, float* grad_out) const noexcept {
+  // derivatives of a constant are all zero
+  for (std::size_t i = 0; i < inputs.size(); ++i) grad_out[i] = 0;
+  return value;
+}
+
 std::pair<gpb::Graph::OpCase, void*> Const::to_proto() const noexcept {
   auto* c = new gpb::Const();  // caller will take ownership
   c->set_value(value);
@@ -140,6 +197,17 @@ float Var::eval(const Inputs& inputs) const noexcept {
     std::abort();  // TODO also log an error
   }
   return var_it->second;
+}
+
+float Var::eval_grad(const Inputs& inputs, float* grad_out) const noexcept {
+  // derivatives of a variable w.r.t. all variables is a one-hot vector:
+  // the only 1. is at the position of the variable itself
+  for (std::size_t i = 0; i < inputs.size(); ++i) grad_out[i] = 0;
+  // TODO find a way to move this out of the hot loop
+  const std::size_t var_idx = find_var_idx(name, inputs);
+  grad_out[var_idx] = 1.;
+
+  return eval(inputs);
 }
 
 std::pair<gpb::Graph::OpCase, void*> Var::to_proto() const noexcept {
