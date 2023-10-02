@@ -24,9 +24,6 @@ const Const c{10.};
 // currently only additions and multiplications are supported
 
 // g(x,y,z) = yx^3 + xyz + cz(x + y) + c
-// dg/dx = 3yx^2 + yz + cz
-// dg/dy = x^3 + xz + cz
-// dg/dz = xy + cx + cy
 const Graph g = x*x*x*y + x*y*z + c*z*(x + y) + c;
 
 // now given some concrete values for the input variables...
@@ -39,11 +36,13 @@ const auto &[value, grads] = g.eval_grad(inputs);
 // g(2,3,4) = 24 + 24 + 200 + 10 = 258
 EXPECT_FLOAT_EQ(value, 258.);
 
-// dg/dx(2,3,4) = 36 + 12 + 40 = 88
+// dg/dx(2,3,4) = 3yx^2 + yz + cz = 36 + 12 + 40 = 88
 EXPECT_FLOAT_EQ(grads(0), 88.);
-// dg/dy(2,3,4) = 8 + 8 + 40 = 56
+
+// dg/dy(2,3,4) = x^3 + xz + cz = 8 + 8 + 40 = 56
 EXPECT_FLOAT_EQ(grads(1), 56.);
-// dg/dz(2,3,4) = 6 + 20 + 30 = 56
+
+// dg/dz(2,3,4) = xy + cx + cy = 6 + 20 + 30 = 56
 EXPECT_FLOAT_EQ(grads(2), 56.);
 ```
 
