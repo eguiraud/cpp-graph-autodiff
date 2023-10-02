@@ -256,4 +256,4 @@ absl::Status to_file(const Graph& graph, fs::path path);
 /// Deserialize a protobuf file into a Graph instance.
 absl::StatusOr<Graph> from_file(fs::path path);
 
-}  // namespace compute_graph_ad
+}  // namespace graph_autodiff

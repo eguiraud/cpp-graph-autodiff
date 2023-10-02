@@ -1,7 +1,8 @@
+#include "graph_autodiff/graph.h"
+
 #include <gtest/gtest.h>
 
 #include "absl/status/statusor.h"
-#include "graph_autodiff/graph.h"
 
 using namespace graph_autodiff;
 
