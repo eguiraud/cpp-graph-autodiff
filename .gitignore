@@ -1,4 +1,8 @@
-bazel-bin
-bazel-cpp-compute-graph-autodiff
-bazel-out
-bazel-testlogs
+bazel-bin/
+bazel-cpp-graph-autodiff/
+bazel-out/
+bazel-testlogs/
+external/
+.cache/
+compile_commands.json
+.gdb_history
