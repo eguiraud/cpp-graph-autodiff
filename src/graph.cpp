@@ -9,6 +9,7 @@ under certain conditions: see LICENSE.
 #include <cassert>
 #include <cstddef>  // std::size_t
 #include <fstream>
+#include <iterator>
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -71,10 +72,11 @@ std::size_t find_var_idx(std::string_view name, const Inputs& inputs) {
   // TODO this should _not_ be in the hot loop. do it once at the beginning.
   std::vector<std::string> var_names;
   var_names.reserve(inputs.size());
-  for (auto& [name, value] : inputs) var_names.push_back(name);
-  std::sort(var_names.begin(), var_names.end());
+  absl::c_transform(inputs, std::back_inserter(var_names),
+                    [](const auto& p) { return p.first; });
+  absl::c_sort(var_names);
 
-  auto it = std::find(var_names.begin(), var_names.end(), name);
+  auto it = absl::c_find(var_names, name);
   return std::distance(var_names.begin(), it);
 }
 }  // end of anonymous namespace
