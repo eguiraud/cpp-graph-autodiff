@@ -31,6 +31,8 @@ under certain conditions: see LICENSE.
 
 namespace compute_graph_ad {
 
+namespace gpb = graph_proto;
+
 /// Inputs to a graph's eval function: a mapping from variable name to value.
 using Inputs = absl::flat_hash_map<std::string, float>;
 
@@ -52,14 +54,8 @@ class Op {
       const Inputs& inputs,
       Eigen::Map<Eigen::RowVectorXf>& grad_out) const noexcept = 0;
 
-  /// Retrieve a type-erased protobuf representation of the operation.
-  /// The first element of the pair is the protobuf enum that specifies
-  /// what operation has been serialized, the second element is a void
-  /// pointer to the corresponding protobuf class instance (e.g.
-  /// graph_proto::Sum).
-  /// The caller takes ownership of the pointer returned.
-  virtual std::pair<graph_proto::Graph::OpCase, void*> to_proto()
-      const noexcept = 0;
+  /// Retrieve a protobuf representation of the operation.
+  virtual gpb::Graph to_proto() const noexcept = 0;
 };
 
 /// A sum operation, with two operands that can be operations themselves.
@@ -76,10 +72,9 @@ class Sum : public Op {
       const Inputs& inputs,
       Eigen::Map<Eigen::RowVectorXf>& grad_out) const noexcept final;
 
-  std::pair<graph_proto::Graph::OpCase, void*> to_proto() const noexcept final;
+  gpb::Graph to_proto() const noexcept final;
 
-  static std::unique_ptr<Sum> from_proto(
-      const graph_proto::Sum& sproto) noexcept;
+  static std::unique_ptr<Sum> from_proto(const gpb::Sum& sproto) noexcept;
 };
 
 /// A multiplication operation, with two operands that can be operations
@@ -97,10 +92,9 @@ class Mul : public Op {
       const Inputs& inputs,
       Eigen::Map<Eigen::RowVectorXf>& grad_out) const noexcept final;
 
-  std::pair<graph_proto::Graph::OpCase, void*> to_proto() const noexcept final;
+  gpb::Graph to_proto() const noexcept final;
 
-  static std::unique_ptr<Mul> from_proto(
-      const graph_proto::Mul& mproto) noexcept;
+  static std::unique_ptr<Mul> from_proto(const gpb::Mul& mproto) noexcept;
 };
 
 /// A compute graph.
@@ -133,10 +127,10 @@ class Graph {
       const Inputs& inputs) const noexcept;
 
   /// Serialize this Graph instance into a corresponding protobuf object.
-  std::unique_ptr<const graph_proto::Graph> to_proto() const noexcept;
+  gpb::Graph to_proto() const noexcept;
 
   /// Deserialize a protobuf object into a Graph instance.
-  static Graph from_proto(const graph_proto::Graph& gproto) noexcept;
+  static Graph from_proto(const gpb::Graph& gproto) noexcept;
 };
 
 /// A scalar constant.
@@ -183,9 +177,8 @@ class Const : public Op {
       const Inputs& inputs,
       Eigen::Map<Eigen::RowVectorXf>& grad_out) const noexcept final;
 
-  std::pair<graph_proto::Graph::OpCase, void*> to_proto() const noexcept final;
-  static std::unique_ptr<Const> from_proto(
-      const graph_proto::Const& cproto) noexcept;
+  gpb::Graph to_proto() const noexcept final;
+  static std::unique_ptr<Const> from_proto(const gpb::Const& cproto) noexcept;
 };
 
 /// A scalar variable: a value-less, named placeholder for a variable in the
@@ -250,10 +243,9 @@ class Var : public Op {
       const Inputs& inputs,
       Eigen::Map<Eigen::RowVectorXf>& grad_out) const noexcept final;
 
-  std::pair<graph_proto::Graph::OpCase, void*> to_proto() const noexcept final;
+  gpb::Graph to_proto() const noexcept final;
 
-  static std::unique_ptr<Var> from_proto(
-      const graph_proto::Var& vproto) noexcept;
+  static std::unique_ptr<Var> from_proto(const gpb::Var& vproto) noexcept;
 };
 
 namespace fs = std::filesystem;
