@@ -46,6 +46,9 @@ EXPECT_FLOAT_EQ(grads(1), 56.);
 EXPECT_FLOAT_EQ(grads(2), 56.);
 ```
 
+`Graph` objects can be serialized and deserialized via [protobuf](https://protobuf.dev)
+using the `to_file` and `from_file` free functions.
+
 ## Run tests
 
 ```shell
