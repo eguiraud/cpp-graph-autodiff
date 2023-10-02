@@ -48,8 +48,9 @@ class Op {
   /// The `grad_out` argument is a buffer of sufficient size that the caller
   /// allocated that should be filled with the values of the gradients.
   /// See Graph::eval_grad() for more information.
-  virtual float eval_grad(const Inputs& inputs,
-                          float* grad_out) const noexcept = 0;
+  virtual float eval_grad(
+      const Inputs& inputs,
+      Eigen::Map<Eigen::RowVectorXf>& grad_out) const noexcept = 0;
 
   /// Retrieve a type-erased protobuf representation of the operation.
   /// The first element of the pair is the protobuf enum that specifies
@@ -71,7 +72,9 @@ class Sum : public Op {
 
   float eval(const Inputs& inputs) const noexcept final;
 
-  float eval_grad(const Inputs& inputs, float* grad_out) const noexcept final;
+  float eval_grad(
+      const Inputs& inputs,
+      Eigen::Map<Eigen::RowVectorXf>& grad_out) const noexcept final;
 
   std::pair<graph_proto::Graph::OpCase, void*> to_proto() const noexcept final;
 
@@ -90,7 +93,9 @@ class Mul : public Op {
 
   float eval(const Inputs& inputs) const noexcept final;
 
-  float eval_grad(const Inputs& inputs, float* grad_out) const noexcept final;
+  float eval_grad(
+      const Inputs& inputs,
+      Eigen::Map<Eigen::RowVectorXf>& grad_out) const noexcept final;
 
   std::pair<graph_proto::Graph::OpCase, void*> to_proto() const noexcept final;
 
@@ -174,7 +179,9 @@ class Const : public Op {
 
   float eval(const Inputs&) const noexcept final { return value; }
 
-  float eval_grad(const Inputs& inputs, float* grad_out) const noexcept final;
+  float eval_grad(
+      const Inputs& inputs,
+      Eigen::Map<Eigen::RowVectorXf>& grad_out) const noexcept final;
 
   std::pair<graph_proto::Graph::OpCase, void*> to_proto() const noexcept final;
   static std::unique_ptr<Const> from_proto(
@@ -236,7 +243,9 @@ class Var : public Op {
 
   float eval(const Inputs& inputs) const noexcept final;
 
-  float eval_grad(const Inputs& inputs, float* grad_out) const noexcept final;
+  float eval_grad(
+      const Inputs& inputs,
+      Eigen::Map<Eigen::RowVectorXf>& grad_out) const noexcept final;
 
   std::pair<graph_proto::Graph::OpCase, void*> to_proto() const noexcept final;
 
