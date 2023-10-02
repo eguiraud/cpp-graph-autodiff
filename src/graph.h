@@ -12,6 +12,7 @@ under certain conditions: see LICENSE.
 #include <string_view>
 #include <utility>  // std::pair
 
+#include "Eigen/Core"
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -43,6 +44,13 @@ class Op {
   /// Evaluate this operation on the inputs provided.
   virtual float eval(const Inputs& inputs) const noexcept = 0;
 
+  /// Evaluate this operation and its gradient w.r.t. the inputs provided.
+  /// The `grad_out` argument is a buffer of sufficient size that the caller
+  /// allocated that should be filled with the values of the gradients.
+  /// See Graph::eval_grad() for more information.
+  virtual float eval_grad(const Inputs& inputs,
+                          float* grad_out) const noexcept = 0;
+
   /// Retrieve a type-erased protobuf representation of the operation.
   /// The first element of the pair is the protobuf enum that specifies
   /// what operation has been serialized, the second element is a void
@@ -63,6 +71,8 @@ class Sum : public Op {
 
   float eval(const Inputs& inputs) const noexcept final;
 
+  float eval_grad(const Inputs& inputs, float* grad_out) const noexcept final;
+
   std::pair<graph_proto::Graph::OpCase, void*> to_proto() const noexcept final;
 
   static std::unique_ptr<Sum> from_proto(
@@ -79,6 +89,8 @@ class Mul : public Op {
       : op1(std::move(op1)), op2(std::move(op2)) {}
 
   float eval(const Inputs& inputs) const noexcept final;
+
+  float eval_grad(const Inputs& inputs, float* grad_out) const noexcept final;
 
   std::pair<graph_proto::Graph::OpCase, void*> to_proto() const noexcept final;
 
@@ -107,10 +119,18 @@ class Graph {
 
   float eval(const Inputs& inputs) const noexcept;
 
-  // Serialize this Graph instance into a corresponding protobuf object.
+  /// Evaluate the graph and its gradient at the given point.
+  /// The elements of the gradient are the derivative w.r.t. the input variables
+  /// in alphabetical order.
+  /// The gradient is evaluated via automatic differentiation (forward mode).
+  // TODO let users specify w.r.t. which variables to derive.
+  std::pair<float, Eigen::RowVectorXf> eval_grad(
+      const Inputs& inputs) const noexcept;
+
+  /// Serialize this Graph instance into a corresponding protobuf object.
   std::unique_ptr<const graph_proto::Graph> to_proto() const noexcept;
 
-  // Deserialize a protobuf object into a Graph instance.
+  /// Deserialize a protobuf object into a Graph instance.
   static Graph from_proto(const graph_proto::Graph& gproto) noexcept;
 };
 
@@ -153,6 +173,8 @@ class Const : public Op {
   friend Graph operator*(const Const& c1, const Graph& g2) { return g2 * c1; }
 
   float eval(const Inputs&) const noexcept final { return value; }
+
+  float eval_grad(const Inputs& inputs, float* grad_out) const noexcept final;
 
   std::pair<graph_proto::Graph::OpCase, void*> to_proto() const noexcept final;
   static std::unique_ptr<Const> from_proto(
@@ -213,6 +235,8 @@ class Var : public Op {
   friend Graph operator*(const Var& v1, const Graph& g2) { return g2 * v1; }
 
   float eval(const Inputs& inputs) const noexcept final;
+
+  float eval_grad(const Inputs& inputs, float* grad_out) const noexcept final;
 
   std::pair<graph_proto::Graph::OpCase, void*> to_proto() const noexcept final;
 

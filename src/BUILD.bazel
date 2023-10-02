@@ -9,7 +9,8 @@ cc_library(
         "@abseil-cpp//absl/status:status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/container:flat_hash_map",
-        "@fmt//:fmt"
+        "@fmt//:fmt",
+        "@eigen//:eigen"
     ],
     visibility = ["//visibility:public"]
 )
